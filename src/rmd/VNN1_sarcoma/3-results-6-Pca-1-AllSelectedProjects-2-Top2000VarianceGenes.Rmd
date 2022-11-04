@@ -1,0 +1,47 @@
+#### Top 2000 variance genes {#resultsPcaAllSelectedProjectsTop2000VarianceGenes}
+
+```{r resultsPcaAllSelectedProjectsTop2000VarianceGenes}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+d_for_pca <- t(assay(vsd))
+
+d_for_pca <- d_for_pca[
+  ,
+  rank(
+    -apply(
+      d_for_pca,
+      2,
+      sd
+    )
+  ) < 2000
+]
+
+rna_samples_metadata <- colData(vsd)
+
+d_pca <- prcomp(
+  d_for_pca,
+  scale = TRUE
+)
+```
+
+```{r resultsPcaAllSelectedProjectsTop2000VarianceGenesIndPC1And2, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 1 and 2"}
+plotPcaRnaSeqIndWithMainCovariates()
+```
+
+```{r resultsPcaAllSelectedProjectsTop2000VarianceGenesIndPC3And4, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 3 and 4"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(3, 4))
+```
+
+```{r resultsPcaAllSelectedProjectsTop2000VarianceGenesIndPC5And6, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 5 and 6"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(5, 6))
+```
+
+```{r resultsPcaAllSelectedProjectsTop2000VarianceGenesIndPC7And8, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 7 and 8"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(7, 8))
+```
+
+```{r resultsPcaAllSelectedProjectsTop2000VarianceGenesIndPC9And10, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 9 and 10"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(9, 10))
+```

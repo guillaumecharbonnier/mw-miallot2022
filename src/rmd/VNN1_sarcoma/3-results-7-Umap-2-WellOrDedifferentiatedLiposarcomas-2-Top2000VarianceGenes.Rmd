@@ -1,0 +1,30 @@
+#### Top 2000 variance genes {#resultsUmapWellOrDeDifferentiatedLiposarcomaTop2000VarianceGenes}
+
+```{r resultsUmapWellOrDeDifferentiatedLiposarcomaTop2000VarianceGenes}
+d_for_umap <- d_for_umap[
+  ,
+  rank(
+    -apply(
+      d_for_umap,
+      2,
+      sd
+    )
+  ) < 2000
+]
+```
+
+```{r resultsUmapWellOrDeDifferentiatedLiposarcomaTop2000VarianceGenes5Neighbors, fig.height=fig_height_umap, fig.width=fig_width_umap, fig.cap="UMAP for 5 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 5)
+```
+
+```{r resultsUmapWellOrDeDifferentiatedLiposarcomaTop2000VarianceGenes10Neighbors, fig.height=fig_height_umap, fig.width=fig_width_umap, fig.cap="UMAP for 10 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 10)
+```
+
+```{r resultsUmapWellOrDeDifferentiatedLiposarcomaTop2000VarianceGenes15Neighbors, fig.height=fig_height_umap, fig.width=fig_width_umap, fig.cap="UMAP for 15 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 15)
+```
+
+```{r resultsUmapWellOrDeDifferentiatedLiposarcomaTop2000VarianceGenes20Neighbors, fig.height=fig_height_umap, fig.width=fig_width_umap, fig.cap="UMAP for 20 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 20)
+```

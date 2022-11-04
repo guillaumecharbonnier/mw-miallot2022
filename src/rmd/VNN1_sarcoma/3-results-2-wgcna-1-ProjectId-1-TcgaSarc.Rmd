@@ -1,0 +1,17 @@
+## Co-expression network with WGCNA
+
+Co-expression network is produced for the whole TCGA-SARC dataset and for each sarcoma subtype with at least 10 available samples.
+The resulting sections are ordered below by decreasing number of samples in the considered datasets.
+
+### Projects
+
+#### TCGA-SARC dataset {#resultsWgcnaProjectIdTcgaSarc}
+
+```{r resultsWgcnaProjectIdTcgaSarcKnit, cache=FALSE, echo=FALSE, warning=FALSE, results="asis"}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+knitWgcnaTemplate(d = vsd[, colData(vsd)$project_id %in% "TCGA-SARC"])
+```

@@ -1,0 +1,44 @@
+### LM22 signature matrix
+
+```{r resultsCibersortxImportLM22SignatureMatrix, fig.height=76, fig.width=9, fig.cap="Absolute values for LM22 signature matrix used to deconvolve mixtures in this section."}
+smi <- "inp/cibersortx/LM22.txt"
+linkSmiToRmdAndBookDir(smi)
+d_lm22 <- fread(smi)
+
+Heatmap(
+  data.matrix(d_lm22[, -1]),
+  row_labels = d_lm22$"Gene symbol",
+  # km = 2,
+  name = "RNA\nsignal",
+  column_title = "Cell types",
+  row_title = "Signature genes"
+)
+```
+
+```{r resultsCibersortxLM22Vnn1Signature, fig.height=7, fig.width=9, fig.cap="Absolute values for VNN1 signal in LM22 signature matrix used to deconvolve mixtures in this section."}
+d <- reshape2::melt(
+  d_lm22[`Gene symbol` == "VNN1"],
+  variable.name = "Cell type",
+  value.name = "RNA signal"
+)
+p <- ggplot(
+  d,
+  aes(
+    fill = `Cell type`,
+    x = `Cell type`,
+    y = `RNA signal`
+  )
+)
+p <- p + geom_bar(
+  stat = "identity"
+)
+p <- p + theme(
+  legend.position = "top",
+  axis.text.x = element_text(
+    angle = 90,
+    hjust = 1,
+    vjust = 0.5
+  )
+)
+p
+```

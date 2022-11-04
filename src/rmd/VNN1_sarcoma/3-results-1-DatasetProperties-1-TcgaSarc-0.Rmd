@@ -1,0 +1,3 @@
+### TCGA-SARC
+
+There are two types of annotations from TCGA-SARC project that could specify the sarcoma subtypes: the *primary diagnosis* and *paper histology*. As seen in the two following subsections, the *primary diagnosis* is more complete, where as *paper histology* discriminates gynecologic leiomyosarcomas from soft tissue ones.

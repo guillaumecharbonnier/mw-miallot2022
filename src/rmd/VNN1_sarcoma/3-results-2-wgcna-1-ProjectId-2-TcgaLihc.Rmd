@@ -1,0 +1,10 @@
+#### TCGA-LIHC dataset {#resultsWgcnaProjectIdTcgaLihc}
+
+```{r resultsWgcnaProjectIdTcgaLihcKnit, cache=FALSE, echo=FALSE, warning=FALSE, results="asis"}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+knitWgcnaTemplate(d = vsd[, colData(vsd)$project_id %in% "TCGA-LIHC"])
+```

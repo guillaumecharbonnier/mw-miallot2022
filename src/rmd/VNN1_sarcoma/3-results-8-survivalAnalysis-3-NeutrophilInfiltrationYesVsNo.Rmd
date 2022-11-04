@@ -1,0 +1,206 @@
+### Neutrophil infiltration Yes Vs No {#resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNo}
+
+Currently only for TCGA-SARC (CIBERSORTx fails to compute all TCGA sample in one batch...).
+Neutrophil infiltration is defined as described below:
+
+* Yes: More than 0.4% neutrophils in sample
+* No: < 0.0005% neutrophils in sample
+* interm: between the two tresholds above
+
+```{r resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNo}
+smi <- "inp/cibersortx/CIBERSORTx_Job3_Results.csv"
+linkSmiToRmdAndBookDir(smi)
+d_cibersort <- fread(smi)
+
+ds <- d[d$project_id %in% "TCGA-SARC", ]
+
+ds <- data.table(
+  Mixture = rownames(ds),
+  as.data.table(ds)
+)
+
+ds <- merge(
+  ds,
+  d_cibersort,
+  by = "Mixture"
+)
+
+ds[
+  ,
+  neutrophil_infiltration := ifelse(
+    ds$Neutrophils < 0.000005,
+    "No",
+    ifelse(
+      ds$Neutrophils > 0.004,
+      "Yes",
+      "Int"
+    )
+  )
+]
+ds[
+  ,
+  neutrophil_infiltration := factor(
+    neutrophil_infiltration,
+    levels = c("No", "Int", "Yes")
+  )
+]
+```
+
+#### By project id {#resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByProjectId}
+
+```{r resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByProjectId, fig.cap="Kaplan-Meier plot for TCGA-SARC"}
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ neutrophil_infiltration,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+
+#### By paper short histo {#resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByPaperShortHisto}
+
+##### STLMS {#resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByPaperShortHistoSTLMS}
+
+```{r resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByPaperShortHistoSLMS, fig.cap="Kaplan-Meier plot for STLMS"}
+dss <- ds[paper_short_histo %in% "STLMS"]
+fit <- survfit(
+  Surv(
+    dss$days_to_death_or_last_follow_up,
+    dss$vital_status_bin,
+  ) ~ neutrophil_infiltration,
+  data = dss
+)
+ggsurvplot(
+  fit,
+  data = dss,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+##### DDLPS {#resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByPaperShortHistoDDLPS}
+
+```{r resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByPaperShortHistoDDLPS, fig.cap="Kaplan-Meier plot for DDLPS"}
+dss <- ds[paper_short_histo %in% "DDLPS"]
+fit <- survfit(
+  Surv(
+    dss$days_to_death_or_last_follow_up,
+    dss$vital_status_bin,
+  ) ~ neutrophil_infiltration,
+  data = dss
+)
+ggsurvplot(
+  fit,
+  data = dss,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+##### UPS {#resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByPaperShortHistoUPS}
+
+```{r resultsSurvivalAnalysisNeutrophilInfiltrationYesVsNoByPaperShortHistoUPS, fig.cap="Kaplan-Meier plot for UPS"}
+dss <- ds[paper_short_histo %in% "UPS"]
+fit <- survfit(
+  Surv(
+    dss$days_to_death_or_last_follow_up,
+    dss$vital_status_bin,
+  ) ~ neutrophil_infiltration,
+  data = dss
+)
+ggsurvplot(
+  fit,
+  data = dss,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+
+#### VNN1 survival for non-infiltrated-by-neutrophil sarcoma
+
+```{r resultsSurvivalAnalysisVnn1HighVsLowNonInfiltratedByNeutrophilSarcoma, fig.cap="Kaplan-Meier plot for non-infiltrated-by-neutrophil sarcoma"}
+dss <- ds[neutrophil_infiltration %in% "No"]
+fit <- survfit(
+  Surv(
+    dss$days_to_death_or_last_follow_up,
+    dss$vital_status_bin,
+  ) ~ VNN1_group_by_project_id,
+  data = dss
+)
+ggsurvplot(
+  fit,
+  data = dss,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesNonInfiltratedByNeutrophilSarcoma, fig.cap="Kaplan-Meier plot for non-infiltrated-by-neutrophil sarcoma"}
+dss <- ds[neutrophil_infiltration %in% "No"]
+fit <- survfit(
+  Surv(
+    dss$days_to_death_or_last_follow_up,
+    dss$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = dss
+)
+ggsurvplot(
+  fit,
+  data = dss,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+#### VNN1 survival for infiltrated-by-neutrophil sarcoma
+```{r resultsSurvivalAnalysisVnn1HighVsLowInfiltratedByNeutrophilSarcoma, fig.cap="Kaplan-Meier plot for infiltrated-by-neutrophil sarcoma"}
+dss <- ds[neutrophil_infiltration %in% "Yes"]
+fit <- survfit(
+  Surv(
+    dss$days_to_death_or_last_follow_up,
+    dss$vital_status_bin,
+  ) ~ VNN1_group_by_project_id,
+  data = dss
+)
+ggsurvplot(
+  fit,
+  data = dss,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesInfiltratedByNeutrophilSarcoma, fig.cap="Kaplan-Meier plot for infiltrated-by-neutrophil sarcoma"}
+dss <- ds[neutrophil_infiltration %in% "Yes"]
+fit <- survfit(
+  Surv(
+    dss$days_to_death_or_last_follow_up,
+    dss$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = dss
+)
+ggsurvplot(
+  fit,
+  data = dss,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+

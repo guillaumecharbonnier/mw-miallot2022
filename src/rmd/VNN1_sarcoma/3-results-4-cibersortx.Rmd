@@ -1,0 +1,321 @@
+## Cell deconvolution with CIBSERSORTx
+
+
+```{r resultsCibersortxExportValues}
+# Need adjustement because now vsd also contains samples outside TCGA-SARC
+# d_to_export <- data.table(
+#   GeneSymbol = rowData(vsd)$hugo_symbol,
+#   assay(vsd)
+# )
+# fwrite(
+#   x = d_to_export,
+#   file = file.path(
+#     gdc_dir,
+#     "TCGA-SARC_data_for_cibersort.tsv"
+#   ),
+#   sep = "\t"
+# )
+# rm(d_to_export)
+```
+
+The dataset is imported to CIBERSORTx and cell deconvolution is run using these parameters:
+
+* Date: 2021-01-16 07:05:59
+* Job type: Impute Cell Fractions
+* Signature matrix file: LM22.update-gene-symbols.txt
+* Mixture file: TCGA-SARC_data_for_cibersort.tsv
+* Batch correction: enabled
+* Batch correction mode: B-mode
+* Source GEP file used for batch correction: LM22.update-gene-symbols.txt
+* Disable quantile normalization: true
+* Run mode (relative or absolute): relative
+* Permutations: 100
+
+Results correspond to Job3 from Philippe Naquet account and are retrieved and available in the [mw-sarcoma-data repository](https://github.com/guillaumecharbonnier/mw-sarcoma-data/tree/main/inp/cibersortx) (Private until publication).
+
+```{r resultsCibersortxImportResults}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+smi <- "inp/cibersortx/CIBERSORTx_Job3_Results.csv"
+linkSmiToRmdAndBookDir(smi)
+d_cibersort <- fread(smi)
+
+d <- data.table(
+  VNN1_VST_signal = assay(vsd)[
+    rowData(vsd)$hugo_symbol == "VNN1",
+    d_cibersort$Mixture
+  ],
+  d_cibersort
+)
+
+d_metadata_samples <- as.data.table(
+  colData(vsd)[
+    ,
+    c(
+      "primary_diagnosis",
+      "paper_short_histo",
+      "barcode"
+    )
+  ]
+)
+
+d <- merge(
+  d,
+  d_metadata_samples,
+  by.x = "Mixture",
+  by.y = "barcode"
+)
+
+d$Mixture <- factor(
+  d$Mixture,
+  levels = d$Mixture[order(d$VNN1_VST_signal)]
+)
+```
+
+
+```{r resultsCibersortxPlotVnn1, fig.height=35, fig.width=8, fig.cap="This barplot is a visual explanation for the ordering of samples used for other barplots below."}
+p <- ggplot(
+  d,
+  aes(
+    fill = VNN1_VST_signal,
+    x = Mixture,
+    y = VNN1_VST_signal
+  )
+)
+p <- p + geom_col()
+#  stat = "identity"
+# )
+p <- p + coord_flip()
+p <- p + theme(
+  legend.position = "top",
+  legend.justification = "left"
+)
+p
+```
+
+
+```{r resultsCibersortxPlotStack, fig.height=35, fig.width=8, fig.cap="Stacked barplots for CIBERSORTx results. Fancy, but not really readable. See barplots below."}
+d <- melt(
+  d,
+  id.vars = c(
+    "VNN1_VST_signal",
+    "Mixture",
+    "P-value",
+    "Correlation",
+    "RMSE",
+    "primary_diagnosis",
+    "paper_short_histo"
+  ),
+  variable.name = "Cell_type",
+  value.name = "Proportion"
+)
+p <- ggplot(
+  d,
+  aes(
+    fill = Cell_type,
+    y = Proportion,
+    x = Mixture
+  )
+)
+p <- p + geom_bar(
+  position = "stack",
+  stat = "identity"
+)
+p <- p + coord_flip()
+p <- p + theme(
+  legend.position = "top",
+  legend.justification = "left"
+)
+p
+```
+
+
+```{r resultsCibersortxPlotFacet, fig.height=35, fig.width=16, fig.cap="Same CIBERSORTx results but splitted by cell types on facets."}
+p <- ggplot(
+  d,
+  aes(
+    fill = Cell_type,
+    x = Mixture,
+    y = Proportion
+  )
+)
+p <- p + facet_grid(~Cell_type, scale = "free")
+p <- p + geom_bar(
+  # position = "stack",
+  stat = "identity"
+)
+p <- p + coord_flip()
+p <- p + theme(
+  legend.position = "top"
+)
+p
+```
+
+```{r resultsCibersortxPlotFacetOnlyCellTypesCorrelatedWithVnn1, fig.height=35, fig.width=12, fig.cap="Focus on cell types that should express VNN1, or correlate with it."}
+selected_cell_types <- c(
+  "Monocytes",
+  "Macrophages M0",
+  "Macrophages M1",
+  "Macrophages M2",
+  "Neutrophils",
+  "T cells CD8"
+)
+p <- ggplot(
+  d[Cell_type %in% selected_cell_types],
+  aes(
+    fill = Cell_type,
+    x = Mixture,
+    y = Proportion
+  )
+)
+p <- p + facet_grid(~Cell_type, scale = "free")
+p <- p + geom_bar(
+  # position = "stack",
+  stat = "identity"
+)
+p <- p + coord_flip()
+p <- p + theme(
+  legend.position = "top"
+)
+p
+```
+
+```{r resultsCibersortxPlotFacetOnlyCellTypesCorrelatedWithVnn1ByPrimaryDiagnosis, fig.height=45, fig.width=8, fig.cap="Focus on cell types that should express VNN1. Facet by primary diagnosis. For each facet, samples are still ordered from high-to-low VNN1 expression from top-to-bottom."}
+p <- p + facet_grid(
+  primary_diagnosis ~ Cell_type,
+  scales = "free",
+  space = "free_y"
+)
+p
+```
+
+```{r resultsCibersortxPlotFacetOnlyCellTypesCorrelatedWithVnn1ByPaperShortHisto, fig.height=45, fig.width=8, fig.cap="Focus on cell types that should express VNN1. Facet by paper short histo."}
+p <- p + facet_grid(
+  paper_short_histo ~ Cell_type,
+  scales = "free",
+  space = "free_y"
+)
+p
+```
+
+
+
+```{r resultsCibersortxPlotFacetOnlyCellTypesCorrelatedWithVnn1Stack, fig.height=35, fig.width=8, fig.cap="Focus on cell types that should express VNN1. Stacked view allow  to see the cell type distribution match VNN1 signal overall, but with a few strong exceptions, *eg* TCGA-HB-A2OT-01A-11R-A21T-07."}
+p <- ggplot(
+  d[Cell_type %in% selected_cell_types],
+  aes(
+    fill = Cell_type,
+    x = Mixture,
+    y = Proportion
+  )
+)
+p <- p + geom_bar(
+  position = "stack",
+  stat = "identity"
+)
+p <- p + coord_flip()
+p <- p + theme(
+  legend.position = "top"
+)
+p
+```
+
+```{r resultsCibersortxPlotFacetOnlyCellTypesCorrelatedWithVnn1StackByPrimaryDiagnosis, fig.height=45, fig.width=8, fig.cap="Focus on cell types that should express VNN1. Stacked view. Facet by primary diagnosis."}
+p <- p + facet_grid(
+  primary_diagnosis ~ .,
+  scales = "free",
+  space = "free"
+)
+p
+```
+
+```{r resultsCibersortxPlotFacetOnlyCellTypesCorrelatedWithVnn1StackByPaperShortHisto, fig.height=45, fig.width=8, fig.cap="Focus on cell types that should express VNN1. Stacked view. Facet by paper short histo."}
+p <- p + facet_grid(
+  paper_short_histo ~ .,
+  scales = "free",
+  space = "free"
+)
+p
+```
+
+### Highlight Neutrophils
+
+```{r resultsCibersortxCorrelationNeutroVNN1, fig.height=7, fig.width=8, fig.cap="Correlation between neutrophil proportion and VNN1 signal."}
+d_neutro <- d[Cell_type %in% "Neutrophils"]
+lm_eqn <- function(df) {
+  m <- lm(Proportion ~ VNN1_VST_signal, df)
+  eq <- substitute(
+    italic(y) == a + b %.% italic(x) * "," ~ ~ italic(r)^2 ~ "=" ~ r2,
+    list(
+      a = format(coef(m)[1], digits = 2),
+      b = format(coef(m)[2], digits = 2),
+      r2 = format(summary(m)$r.squared, digits = 3)
+    )
+  )
+  as.character(as.expression(eq))
+}
+eq <- lm_eqn(d_neutro)
+p <- ggplot(
+  data = d_neutro,
+  aes(
+    x = VNN1_VST_signal,
+    y = Proportion,
+    color = paper_short_histo
+  )
+)
+p <- p + geom_smooth(
+  method = "lm",
+  se = FALSE,
+  color = "black",
+  formula = y ~ x
+)
+p <- p + geom_point()
+p <- p + geom_text(
+  aes(
+    x = 6,
+    y = 0.01,
+    label = eq
+  ),
+  parse = TRUE,
+  inherit.aes = FALSE
+)
+p
+```
+
+
+```{r resultsCibersortxCorrelationNeutroVNN1BySarcomaSubtypes, fig.height=17, fig.width=8, fig.cap="Correlation between neutrophil proportion and VNN1 signal, by sarcoma subtypes"}
+eq <- ddply(
+  d_neutro,
+  .(paper_short_histo),
+  lm_eqn
+)
+p <- ggplot(
+  data = d_neutro,
+  aes(
+    x = VNN1_VST_signal,
+    y = Proportion
+  )
+)
+p <- p + geom_smooth(
+  method = "lm",
+  se = FALSE,
+  color = "black",
+  formula = y ~ x
+)
+p <- p + geom_point(color = "grey")
+p <- p + geom_text(
+  data = eq,
+  aes(
+    x = 6,
+    y = 0.01,
+    label = V1
+  ),
+  parse = TRUE,
+  inherit.aes = FALSE
+)
+p <- p + facet_grid(paper_short_histo ~ .)
+p
+```

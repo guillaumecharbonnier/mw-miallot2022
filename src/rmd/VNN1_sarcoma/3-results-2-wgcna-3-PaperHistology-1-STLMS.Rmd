@@ -1,0 +1,12 @@
+### Paper histology subsets
+
+#### STLMS
+
+```{r resultsWgcnaTcgaSarcSTLMSKnit, cache=FALSE, echo=FALSE, warning=FALSE, results="asis"}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+knitWgcnaTemplate(d = vsd[, colData(vsd)$paper_short_histo %in% "STLMS"])
+```

@@ -1,0 +1,244 @@
+### Synthesis {#resultsWgcnaSynthesis}
+
+For each dataset, only the module with the lowest p-value is kept in order to highlight biological functions found in each cancer type. the results are first ordered by alphabetical order for hallmarks, then ordered by significant occurence in dataset. Finally, color scale are log10-transformed for q-value to highlight most significant hallmarks and subtle differences between datasets.
+
+#### Hallmarks {#resultsWgcnaSynthesisHallmarks}
+
+The xlsx table for the qvalues of all significant Hallmarks gene sets is available [here](resultsWgcnaSynthesisHallmarks.xlsx).
+
+```{r}
+source("loadEnv.R")
+```
+
+```{r resultsWgcnaSynthesisHallmarks}
+res_files <- list.files(
+  path = file.path(
+    book_from_rmd,
+    "rds"
+  ),
+  pattern = "resultsWgcna.*Hallmarks.rds",
+  full.names = TRUE
+)
+names(res_files) <- gsub(
+  pattern = paste0(
+    book_from_rmd,
+    "/rds/resultsWgcna|KnitComputeEnrichHallmarks.rds"
+  ),
+  replacement = "",
+  x = res_files
+)
+res_tables <- lapply(res_files, readRDS)
+
+extractTopPvalForEachSignifTerm <- function(df) {
+  d <- df@compareClusterResult[order(df@compareClusterResult$pvalue),]
+  d <- d[!duplicated(d$ID),]
+  d <- d[, c("ID", "GeneRatio", "BgRatio", "pvalue", "qvalue")]
+  return(d)
+}
+top_res_tables <- lapply(res_tables, extractTopPvalForEachSignifTerm)
+
+d <- reshape2::melt(
+  top_res_tables,
+  id.vars = names(top_res_tables[[1]])
+)
+setnames(
+  d,
+  old = "L1",
+  new = "dataset"
+)
+rm(res_files, res_tables, top_res_tables)
+
+d$GeneRatio <- sapply(d$GeneRatio, function(x) eval(parse(text = x)))
+
+# when the generatio is 1, the qvalue is NA. Better to have pvalue instead of NA for plotting
+d[is.na(d$qvalue),"qvalue"] <- d[is.na(d$qvalue),"pvalue"]
+
+fig_width <- 9
+
+plotDotplotWgcnaSynthesis <- function(d, col_trans='identity') {
+  p <- ggplot(
+  d,
+  aes(
+    x=dataset,
+    y=ID,
+    color = qvalue,
+    size = GeneRatio
+    )
+  )
+  p <- p + geom_point()
+  p <- p + scale_color_gradient(
+    low = "red",
+    high = "blue",
+    trans = col_trans
+  )
+  p <- p + theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    )
+  )
+  p
+}
+
+names_interest_hallmarks <- c(
+  "HALLMARK_MTORC1_SIGNALING",
+  "HALLMARK_PI3K_AKT_MTOR_SIGNALING",
+  "HALLMARK_KRAS_SIGNALING_UP","HALLMARK_KRAS_SIGNALING_DN",
+  "HALLMARK_GLYCOLYSIS",
+  "HALLMARK_OXIDATIVE_PHOSPHORYLATION",
+  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION",
+  "HALLMARK_MITOTIC_SPINDLE",
+  "HALLMARK_G2M_CHECKPOINT"
+)
+
+n_signif_occurences <- table(d$ID)
+names_signif_non_ubiquitous_occurences <- names(n_signif_occurences)[n_signif_occurences != max(n_signif_occurences)]
+
+# Here uncommon means the hallmark is enriched in less than half the datasets
+names_signif_uncommon_occurences <- names(n_signif_occurences)[n_signif_occurences < median(n_signif_occurences)]
+
+ds <- reshape2::dcast(
+  data = d,
+  formula = ID~dataset,
+  value.var = "qvalue"
+)
+wb <- createWorkbook()
+sheet_name <- "Hallmarks"
+addWorksheet(
+  wb,
+  sheet_name
+)
+writeDataTable(
+  wb,
+  sheet_name,
+  ds,
+  startCol = 1
+)
+
+freezePane(
+  wb,
+  sheet = sheet_name,
+  firstRow = TRUE,
+  firstCol = TRUE
+)
+headerStyle <- createStyle(
+  # fontSize = 18,
+  # fontName = "Arial",
+  # textDecoration = "bold",
+  # halign = "left",
+  # fgFill = "#1A33CC",
+  # border = "TopBottomLeftRight",
+  textRotation = 90
+)
+addStyle(
+  wb,
+  sheet = sheet_name,
+  style = headerStyle,
+  rows = 1,
+  cols = 1:ncol(ds)
+)
+setRowHeights(
+  wb,
+  sheet = sheet_name,
+  rows = 1,
+  heights = 200
+)
+setColWidths(
+  wb,
+  sheet = sheet_name,
+  cols = 2:ncol(ds),
+  widths = 4,
+)
+setColWidths(
+  wb,
+  sheet = sheet_name,
+  cols = 1,
+  widths = 32,
+)
+conditionalFormatting(
+  wb,
+  sheet = sheet_name,
+  rows = 1:nrow(ds) + 1,
+  type = "colourScale",
+  style = c("darkgreen", "white"),
+  #rule = c(1, 0),
+  cols = which(names(ds) != "ID")
+)
+saveWorkbook(
+  wb,
+  file = file.path(
+    book_from_rmd,
+    "resultsWgcnaSynthesisHallmarks.xlsx"
+  ),
+  overwrite = TRUE
+)
+```
+
+##### Alphabetically-ordered hallmarks and all datasets {#resultsWgcnaSynthesisAllDatasetsAlphabet}
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsAlphabetAllSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=14, fig.cap="Dotplot for Hallmarks significant (q-value < 0.05) in at least one dataset."}
+plotDotplotWgcnaSynthesis(d)
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsAlphabetNonUbiquitousSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=10, fig.cap="Dotplot for Hallmarks which are significant (q-value < 0.05) in at least one dataset and non ubiquitous, i.e. not significant for all datasets."}
+plotDotplotWgcnaSynthesis(d[d$ID %in% names_signif_non_ubiquitous_occurences,])
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsAlphabetUncommonSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=7, fig.cap="Dotplot for Hallmarks which are significant (q-value < 0.05) in at least one dataset, and uncommon, i.e. significant in less than half the datasets."}
+plotDotplotWgcnaSynthesis(d[d$ID %in% names_signif_uncommon_occurences,])
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsAlphabetInterestHallmarks, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=5, fig.cap="Dotplot for Hallmarks of interest (provided by Philipe Naquet)."}
+plotDotplotWgcnaSynthesis(d[d$ID %in% names_interest_hallmarks,])
+```
+
+##### Occurency-ordered hallmarks and all datasets {#resultsWgcnaSynthesisAllDatasetsOccurencyOrder}
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderAllSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=14, fig.cap="Dotplot for Hallmarks significant (q-value < 0.05) in at least one dataset."}
+d$ID <- factor(
+  d$ID,
+  levels = names(table(d$ID))[order(table(d$ID))]
+)
+plotDotplotWgcnaSynthesis(d)
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderNonUbiquitousSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=10, fig.cap="Dotplot for Hallmarks which are significant (q-value < 0.05) in at least one dataset and non ubiquitous, i.e. not significant for all datasets."}
+plotDotplotWgcnaSynthesis(d[d$ID %in% names_signif_non_ubiquitous_occurences,])
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderUncommonSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=7, fig.cap="Dotplot for Hallmarks which are significant (q-value < 0.05) in at least one dataset, and uncommon, i.e. significant in less than half the datasets."}
+plotDotplotWgcnaSynthesis(d[d$ID %in% names_signif_uncommon_occurences,])
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderInterestHallmarks, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=5, fig.cap="Dotplot for Hallmarks of interest (provided by Philipe Naquet)."}
+plotDotplotWgcnaSynthesis(d[d$ID %in% names_interest_hallmarks,])
+```
+
+##### Log10 transformed color scale {#resultsWgcnaSynthesisAllDatasetsOccurencyOrderLog10Trans}
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderLog10TransAllSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=14, fig.cap="Dotplot for Hallmarks significant (q-value < 0.05) in at least one dataset."}
+plotDotplotWgcnaSynthesis(d, col_trans = "log10")
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderLog10TransNonUbiquitousSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=10, fig.cap="Dotplot for Hallmarks which are significant (q-value < 0.05) in at least one dataset and non ubiquitous, i.e. not significant for all datasets."}
+plotDotplotWgcnaSynthesis(
+  d[d$ID %in% names_signif_non_ubiquitous_occurences,],
+  col_trans = "log10"
+)
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderLog10TransUncommonSignif, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=7, fig.cap="Dotplot for Hallmarks which are significant (q-value < 0.05) in at least one dataset, and uncommon, i.e. significant in less than half the datasets."}
+plotDotplotWgcnaSynthesis(
+  d[d$ID %in% names_signif_uncommon_occurences,],
+  col_trans = "log10"
+)
+```
+
+```{r resultsWgcnaSynthesisHallmarksAllDatasetsOccurencyOrderLog10TransInterestHallmarks, dependson="resultsWgcnaSynthesisHallmarks", fig.width=fig_width, fig.height=5, fig.cap="Dotplot for Hallmarks of interest (provided by Philipe Naquet)."}
+plotDotplotWgcnaSynthesis(
+  d[d$ID %in% names_interest_hallmarks,],
+  col_trans = "log10"
+)
+```
+

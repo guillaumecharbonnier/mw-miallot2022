@@ -1,0 +1,14 @@
+#### Primary diagnosis subtypes
+
+```{r resultsDatasetPropertiesAllSelectedProjectsPrimaryDiagnosis, cache=FALSE, results="asis"}
+source("loadEnv.R")
+
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+knitDatasetPropertiesTemplate(
+  vsd,
+  key = "primary_diagnosis"
+)
+```

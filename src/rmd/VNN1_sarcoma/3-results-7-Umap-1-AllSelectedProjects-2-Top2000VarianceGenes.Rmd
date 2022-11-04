@@ -1,0 +1,32 @@
+#### Top 2000 variance genes {#resultsUmapAllSelectedProjectsTop2000VarianceGenes}
+
+```{r resultsUmapAllSelectedProjectsTop2000VarianceGenes}
+d_for_umap <- d_for_umap[
+  ,
+  rank(
+    -apply(
+      d_for_umap,
+      2,
+      sd
+    )
+  ) < 2000
+]
+```
+
+In this section, most genes are kept for the UMAP. Only those with a standard deviation lower than 0.3 are removed, leading to a dataset with `r ncol(d_for_umap)` genes.
+
+```{r resultsUmapAllSelectedProjectsTop2000VarianceGenes5Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 5 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 5)
+```
+
+```{r resultsUmapAllSelectedProjectsTop2000VarianceGenes10Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 10 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 10)
+```
+
+```{r resultsUmapAllSelectedProjectsTop2000VarianceGenes15Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 15 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 15)
+```
+
+```{r resultsUmapAllSelectedProjectsTop2000VarianceGenes20Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 20 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 20)
+```

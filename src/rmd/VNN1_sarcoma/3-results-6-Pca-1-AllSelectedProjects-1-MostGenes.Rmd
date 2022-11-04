@@ -1,0 +1,96 @@
+## PCA
+
+### All selected projects {#resultsPcaAllSelectedProjects}
+
+#### On most genes {#resultsPcaAllSelectedProjectsOnMostGenes}
+
+```{r resultsPcaOnMostGenes}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+rna_samples_metadata <- colData(vsd)
+
+d_pca <- prcomp(
+  t(assay(vsd)),
+  scale = TRUE
+)
+```
+
+In this section, most genes are kept for the PCA. Only those with a standard deviation lower than 0.3 are removed, leading to a dataset with `r nrow(vsd)` genes.
+
+```{r resultsPcaAllSelectedProjectsMostGenesDefinePlotPcaRnaSeqIndWithMainCovariates}
+fig_height_pca <- 4.8
+fig_width_pca <- 9
+plotPcaRnaSeqIndWithMainCovariates <- function(
+                                               d = d_pca,
+                                               d_metadata = rna_samples_metadata,
+                                               axes_to_plot = c(1, 2)) {
+  p1 <- fviz_pca_ind(
+    d,
+    axes = axes_to_plot,
+    mean.point = FALSE,
+    label = "none",
+    col.ind = d_metadata$age_at_index
+  )
+  p1 <- p1 + ggtitle(NULL)
+  p1 <- p1 + theme(legend.position = "bottom")
+  p1 <- p1 + scale_color_continuous(name = "Age at index")
+  p1 <- p1 + guides(
+    color = guide_legend(
+      title.position = "top",
+      # hjust = 0.5 centres the title horizontally
+      title.hjust = 0.5,
+      label.position = "bottom"
+    )
+  )
+
+  p2 <- fviz_pca_ind(
+    d,
+    axes = axes_to_plot,
+    mean.point = FALSE,
+    label = "none",
+    habillage = d_metadata$project_id,
+    legend.title = "Project"
+  )
+  p2 <- p2 + ggtitle(NULL)
+  p2 <- p2 + theme(legend.position = "bottom")
+  p2 <- p2 + guides(
+    color = guide_legend(
+      title.position = "top",
+      # hjust = 0.5 centres the title horizontally
+      title.hjust = 0.5,
+      label.position = "bottom"
+    )
+  )
+
+  ggarrange(
+    p1,
+    p2,
+    ncol = 2,
+    nrow = 1,
+    align = "h"
+  )
+}
+```
+
+```{r resultsPcaAllSelectedProjectsOnMostGenesIndPC1And2, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 1 and 2"}
+plotPcaRnaSeqIndWithMainCovariates()
+```
+
+```{r resultsPcaAllSelectedProjectsOnMostGenesIndPC3And4, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 3 and 4"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(3, 4))
+```
+
+```{r resultsPcaAllSelectedProjectsOnMostGenesIndPC5And6, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 5 and 6"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(5, 6))
+```
+
+```{r resultsPcaAllSelectedProjectsOnMostGenesIndPC7And8, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 7 and 8"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(7, 8))
+```
+
+```{r resultsPcaAllSelectedProjectsOnMostGenesIndPC9And10, fig.height=fig_height_pca, fig.width=fig_width_pca, fig.cap="PCA Individuals, components 9 and 10"}
+plotPcaRnaSeqIndWithMainCovariates(axes_to_plot = c(9, 10))
+```

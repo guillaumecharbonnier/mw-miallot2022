@@ -1,0 +1,203 @@
+# Results
+
+## Dataset properties
+
+TCGA projects are described [here](https://wiki.cancerimagingarchive.net/display/Public) and [here](https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga/studied-cancers).
+
+```{r resultsDatasetPropertiesNSamplesByProject, cache=FALSE, results="asis", fig.height=7, fig.width=7, fig.cap="Available metadata for samples from selected projects."}
+source("loadEnv.R")
+
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+d <- list()
+
+for (project in unique(colData(vsd)$project_id)) {
+  d[[project]][["n_samples"]] <- ncol(
+    vsd[, colData(vsd)$project_id %in% project]
+  )
+
+  d[[project]][["n_primary_diagnosis"]] <- length(
+    unique(
+      colData(vsd)[
+        colData(vsd)$project_id %in% project,
+        "primary_diagnosis"
+      ]
+    )
+  )
+}
+
+d <- reshape2::melt(d)
+setnames(
+  d,
+  old = c("L1", "L2"),
+  new = c("project_id", "measure")
+)
+p <- ggplot(
+  d,
+  aes(
+    x = project_id,
+    y = value
+  )
+)
+p <- p + facet_grid(~measure)
+p <- p + geom_bar(stat = "identity")
+
+label_tresh <- max(d$value) / 2
+p <- p + geom_text(
+  aes(label = value),
+  position = position_dodge(0.9),
+  hjust = ifelse(
+    d$value > label_tresh,
+    1.3,
+    -0.3
+  ),
+  colour = ifelse(
+    d$value > label_tresh,
+    "white",
+    "black"
+  )
+)
+p <- p + coord_flip()
+p
+```
+
+```{r resultsDatasetPropertiesBin, fig.height=0.25*length(unique(colData(vsd)$primary_diagnosis))}
+d <- data.frame(colData(vsd)[, c("primary_diagnosis", "project_id")])
+
+p <- ggplot(
+  d,
+  aes(
+    x = primary_diagnosis
+  )
+)
+p <- p + geom_bar(stat = "count")
+
+label_tresh <- 500
+p <- p + geom_text(
+  stat = "count",
+  aes(
+    label = ifelse(
+      ..count.. < label_tresh,
+      ..count..,
+      ""
+    )
+  ),
+  hjust = -0.3,
+  color = "black"
+)
+p <- p + geom_text(
+  stat = "count",
+  aes(
+    label = ifelse(
+      ..count.. > label_tresh,
+      ..count..,
+      ""
+    )
+  ),
+  hjust = 1.3,
+  color = "white"
+)
+
+p <- p + coord_flip()
+p
+```
+
+```{r resultsDatasetPropertiesBinFacet, fig.width=15, fig.height=0.25*length(unique(colData(vsd)$primary_diagnosis))}
+p + facet_grid(. ~ project_id)
+```
+
+```{r resultsDatasetPropertiesMetadataProperties, results="asis", fig.height=69, fig.width=13, fig.cap="Available metadata for samples from selected projects."}
+d <- data.table(
+  metadata = names(colData(vsd)),
+  n_diff_elements = apply(colData(vsd), 2, function(x) length(unique(x))),
+  n_non_na_elements = apply(colData(vsd), 2, function(x) sum(!is.na(x)))
+)
+d[
+  ,
+  highlight := ifelse(
+    n_non_na_elements > 4000 &
+      n_diff_elements > 2 &
+      n_diff_elements < 80,
+    "key factors",
+    "other vars"
+  )
+]
+d$metadata <- factor(
+  x = d$metadata,
+  levels = d$metadata[order(d$n_non_na_elements, d$n_diff_elements)]
+)
+
+d <- melt(d, id.var = c(
+  "metadata",
+  "highlight"
+))
+
+p <- ggplot(
+  d,
+  aes(
+    x = metadata,
+    y = value,
+    fill = highlight
+  )
+)
+p <- p + facet_grid(~variable)
+p <- p + geom_bar(stat = "identity")
+
+label_tresh <- max(d$value) / 2
+p <- p + geom_text(
+  aes(label = value),
+  position = position_dodge(0.9),
+  hjust = ifelse(
+    d$value > label_tresh,
+    1.3,
+    -0.3
+  ),
+  colour = ifelse(
+    d$value > label_tresh,
+    "white",
+    "black"
+  )
+)
+p <- p + coord_flip()
+p
+```
+
+```{r resultsDatasetPropertiesKeyFactors, cache=FALSE, results="asis"}
+key_factors <- unique(d[highlight %in% "key factors"]$metadata)
+l <- list()
+for (key_factor in key_factors) {
+  content <- unique(colData(vsd)[, key_factor])
+  # argument 4 (type 'list') cannot be handled by 'cat'
+  if (!is.list(content)) {
+    l[[key_factor]] <- content
+    cat(
+      "<details><summary>",
+      key_factor,
+      "</summary><ul>",
+      paste(
+        "<li>",
+        content,
+        "</li>"
+      ),
+      "</ul></details>"
+    )
+  }
+}
+
+# print(l)
+# catList <- function(inputList) {
+#   cat(
+#     gsub(
+#       "^!omap\n|:",
+#       "",
+#       yaml::as.yaml(
+#         inputList,
+#         omap = TRUE
+#       )
+#     )
+#   )
+# }
+# catList(l)
+```

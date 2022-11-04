@@ -1,0 +1,17 @@
+---
+title: "VNN1 role in sarcoma outcome"
+author: "[Guillaume Charbonnier](https://guillaumecharbonnier.github.io/)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::gitbook:
+    split_by: rmd
+    toc_depth: 6
+    download: ["epub", "mobi"]
+    sharing:
+      facebook: false
+      twitter: false
+---
+
+```{r, cache=FALSE, include=FALSE}
+source("loadEnv.R")
+```

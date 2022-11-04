@@ -1,0 +1,167 @@
+
+```{r, cache=FALSE}
+n_keys <- length(unique(colData(vsd)[, key]))
+```
+```{r {{chunk_label_prefix}}NumberOfSamplesBySarcomaSubtypes, echo=FALSE, fig.height=n_keys*0.2+1, fig.cap=fig_cap}
+fig_cap <- "Number of samples by sarcoma subtypes."
+
+
+d <- data.frame(table(colData(vsd)[, key]))
+setnames(
+  d,
+  old = c("Var1", "Freq"),
+  new = c(key, "value")
+)
+p <- ggplot(
+  d,
+  aes(
+    x = {{key}},
+    y = value,
+    label = value,
+    fill = {{key}}
+  )
+)
+p <- p + geom_bar(stat = "identity")
+
+label_tresh <- max(d$value)/2
+p <- p + geom_text(
+  aes(label = value),
+  position = position_dodge(0.9),
+  hjust = ifelse(
+    d$value > label_tresh,
+    1.3,
+    -0.3
+  ),
+  colour = ifelse(
+    d$value > label_tresh,
+    "white",
+    "black"
+  )
+)
+
+
+p <- p + coord_flip()
+p <- p + theme(legend.position = "none")
+# p <- p + theme(
+#   axis.text.x = element_text(
+#     angle = 90,
+#     hjust = 1,
+#     vjust = 0.5
+#   )
+# )
+p
+```
+
+```{r {{chunk_label_prefix}}NumberOfSamplesBySarcomaSubtypesAndSex, fig.height=n_keys*0.4+1, fig.cap=fig_cap}
+fig_cap <- "Number of samples by sarcoma subtypes and sex."
+d <- reshape2::melt(table(colData(vsd)[, c("gender", key)]))
+p <- ggplot(
+  d,
+  aes(
+    x = {{key}},
+    y = value,
+    label = value,
+    fill = {{key}}
+  )
+)
+p <- p + geom_bar(stat = "identity")
+p <- p + geom_text()
+p <- p + coord_flip()
+p <- p + theme(legend.position = "none")
+p <- p + facet_grid(rows = vars(gender))
+p
+```
+
+```{r {{chunk_label_prefix}}DistributionOfVnn1VstSignalHistogram, fig.cap=fig_cap}
+fig_cap <- "Distribution of VNN1 signal in all sarcoma subtypes from TCGA-SARC dataset as histogram"
+d <- data.frame(
+  VNN1_VST_signal = assay(vsd)[rownames(vsd) == "ENSG00000112299", ],
+  colData(vsd)
+)
+p <- ggplot(
+  d,
+  aes(
+    x = VNN1_VST_signal,
+    fill = {{key}}
+  )
+)
+p <- p + geom_histogram()
+p
+```
+
+```{r {{chunk_label_prefix}}DistributionOfVnn1VstSignalBoxBeeswarm, fig.height=n_keys*0.4+1, fig.cap=fig_cap}
+fig_cap <- "Distribution of VNN1 signal in all sarcoma subtypes from TCGA-SARC dataset as box-beeswarm-plots"
+p <- ggplot(
+  d,
+  aes(
+    y = VNN1_VST_signal,
+    x = {{key}},
+    color = {{key}}
+  )
+)
+p <- p + coord_flip()
+p <- p + geom_boxplot(outlier.shape = NA)
+p <- p + geom_beeswarm(alpha = 0.3) # , cex = 3)
+p <- p + theme(legend.position = "none")
+p
+```
+
+```{r {{chunk_label_prefix}}DistributionOfVnn1VstSignalBySexBoxBeeswarm, fig.cap=fig_cap}
+fig_cap <- "Distribution of VNN1 signal in all sarcoma subtypes from TCGA-SARC dataset as box-beeswarm-plots, splitted by gender"
+p <- ggplot(
+  d,
+  aes(
+    y = VNN1_VST_signal,
+    x = gender,
+    color = gender
+  )
+)
+p <- p + geom_boxplot(outlier.shape = NA)
+p <- p + geom_beeswarm(groupOnX = TRUE, alpha = 0.3) # , cex = 3)
+p <- p + theme(legend.position = "none")
+p
+```
+
+```{r {{chunk_label_prefix}}DistributionOfVnn1VstSignalBySexAndKeyBoxBeeswarm, fig.height=n_keys*0.4+1, fig.cap=fig_cap}
+fig_cap <- "Distribution of VNN1 signal in all sarcoma subtypes from TCGA-SARC dataset as box-beeswarm-plots, splitted by gender and {{key}}"
+p <- p + facet_grid(rows = vars({{key}}))
+p <- p + theme(strip.text.y.right = element_text(angle = 0))
+p <- p + coord_flip()
+
+# p <- p + theme(
+#   strip.background = element_blank(),
+#   strip.text.y = element_blank()
+# )
+p
+```
+
+```{r {{chunk_label_prefix}}CallVnn1PosNegBySubtypes, fig.height=n_keys*0.4+1, fig.cap=fig_cap}
+fig_cap <- "Distribution of VNN1 signal in all sarcoma subtypes from TCGA-SARC dataset. VNN1+ and VNN1- classes are called using the median VNN1 VST signal as threshold."
+
+d <- data.frame(
+  colData(vsd)[, c(
+    key,
+    "VNN1_group_by_{{key}}"
+  )],
+  VNN1_VST_signal = assay(vsd)[rownames(vsd) == "ENSG00000112299", ]
+)
+
+p <- ggplot(
+  d,
+  aes(
+    x = VNN1_group_by_{{key}},
+    y = VNN1_VST_signal,
+    color = {{key}}
+  )
+)
+p <- p + facet_grid(rows = vars({{key}}))
+p <- p + geom_boxplot(outlier.shape = NA)
+p <- p + geom_point(alpha = 0.3)
+p <- p + facet_grid(rows = vars({{key}}))
+p <- p + theme(
+  legend.position = "none",
+  strip.text.y.right = element_text(angle = 0)
+)
+p <- p + coord_flip()
+p
+```

@@ -1,0 +1,10 @@
+#### Malignant fibrous histiocytoma
+
+```{r resultsWgcnaTcgaSarcMalignantFibrousHistiocytomaKnit, cache=FALSE, echo=FALSE, warning=FALSE, results="asis"}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+knitWgcnaTemplate(d = vsd[, colData(vsd)$primary_diagnosis %in% "Malignant fibrous histiocytoma"])
+```

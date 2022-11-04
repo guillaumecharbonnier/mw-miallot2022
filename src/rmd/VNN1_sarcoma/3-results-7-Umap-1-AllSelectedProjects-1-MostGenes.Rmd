@@ -1,0 +1,97 @@
+## UMAP
+
+[UMAP](https://umap-learn.readthedocs.io/en/latest/basic_usage.html#how-to-use-umap) using different [number of neighbors](https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors) 
+
+### All selected projects {#resultsUmapAllSelectedProjects}
+
+```{r resultsUmapAllSelectedProjectsDefinePlotUmapRnaSeqIndWithMainCovariates}
+fig_height_umap <- 3.9
+plotUmapRnaSeqIndWithMainCovariates <- function(
+                                                d = d_for_umap,
+                                                d_metadata = rna_samples_metadata,
+                                                n_neighbors = 10) {
+  d_umap <- umap(
+    d = d,
+    n_neighbors = n_neighbors
+  )
+
+  d_umap <- data.frame(
+    d_umap$layout,
+    d_metadata
+  )
+
+  col_variables <- c(
+    "age_at_index",
+    "project_id"
+  )
+
+  pl <- list()
+  for (col_var in col_variables) {
+    p <- ggplot(
+      d_umap,
+      aes_string(
+        x = "X1",
+        y = "X2",
+        color = col_var
+      )
+    )
+    p <- p + geom_point()
+    p <- p + theme(
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.box = "horizontal"
+    )
+    p <- p + guides(
+      color = guide_legend(
+        title.position = "top",
+        # hjust = 0.5 centres the title horizontally
+        title.hjust = 0.5,
+        label.position = "bottom"
+      )
+    )
+
+    pl[[col_var]] <- p
+  }
+
+  ggarrange(
+    plotlist = pl,
+    ncol = 2,
+    nrow = 1,
+    align = "h"
+  )
+}
+```
+
+#### Most genes {#resultsUmapAllSelectedProjectsMostGenes}
+
+```{r resultsUmapAllSelectedProjectsMostGenes}
+source("loadEnv.R")
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+
+rna_samples_metadata <- colData(vsd)
+
+d_for_umap <- t(assay(vsd))
+sd_threshold <- 0.3
+d_for_umap <- d_for_umap[, apply(d_for_umap, 2, sd) > sd_threshold]
+rm(vsd)
+```
+
+In this section, most genes are kept for the UMAP. Only those with a standard deviation lower than 0.3 are removed, leading to a dataset with `r ncol(d_for_umap)` genes.
+
+```{r resultsUmapAllSelectedProjectsMostGenes5Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 5 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 5)
+```
+
+```{r resultsUmapAllSelectedProjectsMostGenes10Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 10 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 10)
+```
+
+```{r resultsUmapAllSelectedProjectsMostGenes15Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 15 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 15)
+```
+
+```{r resultsUmapAllSelectedProjectsMostGenes20Neighbors, fig.height=fig_height_umap, fig.cap="UMAP for 20 neighbors"}
+plotUmapRnaSeqIndWithMainCovariates(n_neighbors = 20)
+```

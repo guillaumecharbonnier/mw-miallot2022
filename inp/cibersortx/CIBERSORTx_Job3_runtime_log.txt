@@ -1,0 +1,18 @@
+>Running CIBERSORTxFractions...
+>[Options] mixture: files/naquet@ciml.univ-mrs.fr/TCGA-SARC_data_for_cibersort.tsv
+>[Options] sigmatrix: files/common/LM22.update-gene-symbols.txt
+>[Options] perm: 100
+>[Options] verbose: TRUE
+>[Options] rmbatchBmode: TRUE
+>[Options] sourceGEPs: files/common/LM22_source_GEPs.txt
+>[Options] QN: FALSE
+>[Options] outdir: files/naquet@ciml.univ-mrs.fr/results/
+>[Options] label: Job3
+>=============CIBERSORTx Settings===============
+>Mixture file: files/naquet@ciml.univ-mrs.fr/TCGA-SARC_data_for_cibersort.tsv 
+>Signature matrix file: files/common/LM22.update-gene-symbols.txt 
+>Number of permutations set to: 100 
+>Enable verbose output
+>Do B-mode batch correction
+>==================CIBERSORTx===================
+>Batch correction:.

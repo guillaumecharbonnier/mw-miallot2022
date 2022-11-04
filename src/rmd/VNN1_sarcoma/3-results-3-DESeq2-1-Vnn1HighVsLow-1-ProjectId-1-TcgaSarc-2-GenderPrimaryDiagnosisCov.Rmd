@@ -1,0 +1,18 @@
+###### Gender and primary diagnosis as covariates {#resultsDeseq2Vnn1HighVsLowProjectIdTcgaSarcGenderPrimaryDiagnosisCov}
+
+```{r resultsDeseq2Vnn1HighVsLowProjectIdTcgaSarcGenderPrimaryDiagnosisCovKnitPostDeseq2Template, cache=FALSE, results="asis"}
+source("loadEnv.R")
+
+smi <- "out/r/compute_deseq2/VNN1/HighVsLowProjectIdTcgaSarcGenderPrimaryDiagnosisCov_ddss.rds"
+linkSmiToRmdAndBookDir(smi)
+ddss <- readRDS(smi)
+
+smi <- "out/r/compute_deseq2/VNN1/HighVsLowProjectIdTcgaSarcGenderPrimaryDiagnosisCov_ddssr.rds"
+linkSmiToRmdAndBookDir(smi)
+ddssr <- readRDS(smi)
+
+knitPostDeseq2Template(
+  d = ddss,
+  r = ddssr
+)
+```

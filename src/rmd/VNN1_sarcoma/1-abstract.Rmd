@@ -1,0 +1,3 @@
+# Abstract
+
+Analyses done for the Sarcoma project with Philippe Naquet. These analyses aim to decipher the role of VNN1 in sarcoma outcome using publicly available TCGA-SARC samples.

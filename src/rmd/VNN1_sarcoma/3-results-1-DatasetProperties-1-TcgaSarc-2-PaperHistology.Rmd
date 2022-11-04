@@ -1,0 +1,28 @@
+#### Paper histology subtypes
+
+
+acronym| histology
+-----:|:----------------------------
+DDLPS | DeDifferentiated LiPoSarcoma
+MFS   | MyxoFibroSarcoma
+SS    | Synovial Sarcoma
+STLMS | LeioMyoSarcoma - Soft Tissue
+ULMS  | LeioMyoSarcoma - gynecologic (Uterine source, but can also be ovary or retroperitoneum
+UPS   | Undifferentiated Pleomorphic Sarcoma
+MPNST | Malignant Peripheral Nerve Sheath Tumor
+
+
+```{r resultsDatasetPropertiesTcgaSarcPaperShortHisto, cache=FALSE, results="asis"}
+source("loadEnv.R")
+
+smi <- "out/r/annotate_tcga/vsd.rds"
+linkSmiToRmdAndBookDir(smi)
+vsd <- readRDS(smi)
+vsd <- vsd[, colData(vsd)$project_id %in% "TCGA-SARC" & !is.na(colData(vsd)$paper_short_histo)]
+colData(vsd) <- droplevels(colData(vsd))
+
+knitDatasetPropertiesTemplate(
+  vsd,
+  key = "paper_short_histo"
+)
+```

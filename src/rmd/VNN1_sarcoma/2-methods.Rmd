@@ -1,0 +1,188 @@
+# Methods
+
+TCGA-SARC dataset is retrieved using `TCGAbiolinks` package. Raw HTSeq counts are normalized using `DESeq2` variance stabilizing transformation.
+TCGA barcodes have meaning explained [here](https://docs.gdc.cancer.gov/Encyclopedia/pages/TCGA_Barcode/). Importantly, downloaded samples should be to select only tumors with values <10 in the 14 and 15 positions in the barcode.
+
+
+Information will have prefix 'paper_'. For SARC subtype, they come from:doi:10.1016/j.cell.2017.10.014
+
+
+```{r, cache=FALSE, include=FALSE}
+source("loadEnv.R")
+```
+
+```{r methodsPrintAllTcgaProjects, fig.cap="All projects with retrievable data"}
+d <- TCGAbiolinks:::getGDCprojects()
+produceDataTableWithButtons(d)
+```
+
+```{r methodsPrintSelectedTcgaProjects, fig.cap="Selected projects for this study, to match with Kaplan-Meier analyses done by Philippe Naquet and Richard Miallot"}
+projects <- c(
+  "TCGA-SARC",
+  "TCGA-OV",
+  "TCGA-ESCA",
+  "TCGA-PAAD",
+  "TCGA-MESO",
+  "TCGA-BRCA",
+  "TCGA-LIHC",
+  "TCGA-BLCA",
+  "TCGA-STAD",
+  "TCGA-LUSC",
+  "TCGA-LUAD"
+)
+produceDataTableWithButtons(d[d$id %in% projects, ])
+```
+
+```{r methodsRetrieveTcgaData, include=FALSE, eval=FALSE}
+query <- GDCquery(
+  project = projects,
+  data.category = "Transcriptome Profiling",
+  data.type = "Gene Expression Quantification",
+  file.type = "htseq.counts"
+)
+
+gdc_dir <- file.path(
+  mw_from_rmd,
+  "out/GDCdata"
+)
+
+dir.create(
+  gdc_dir,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+GDCdownload(
+  query,
+  method = "api",
+  directory = gdc_dir,
+  files.per.chunk = 10
+)
+
+dds <- GDCprepare(
+  query,
+  directory = gdc_dir
+)
+
+names(colData(dds)) <- gsub(
+  " ",
+  "_",
+  names(colData(dds))
+)
+
+dds <- dds[, !is.na(colData(dds)$gender)]
+
+colData(dds)$gender <- factor(colData(dds)$gender)
+colData(dds)$primary_diagnosis <- factor(colData(dds)$primary_diagnosis)
+colData(dds)$paper_short_histo <- factor(colData(dds)$paper_short_histo)
+
+dds <- DESeqDataSet(
+  dds,
+  design = ~ gender + primary_diagnosis
+)
+
+# hugo_symbol can be recognized by knitPostDeseq2Template()
+colnames(rowData(dds)) <- sub(
+  pattern = "^external_gene_name$",
+  replacement = "hugo_symbol",
+  x = colnames(rowData(dds))
+)
+
+# keep <- rowSums(counts(dds)) >= 10
+keep <- rowSums(counts(dds)) > ncol(dds)
+dds <- dds[keep, ]
+vsd <- vst(dds, blind = TRUE)
+rm(keep)
+
+# Add annotations related to VNN1 expression level
+colData(vsd)$VNN1_group_all <- factor(
+  ifelse(
+    assay(vsd)[rownames(vsd) == "ENSG00000112299", ] > median(assay(vsd)[rownames(vsd) == "ENSG00000112299", ]),
+    "high",
+    "low"
+  ),
+  levels = c("low", "high")
+)
+
+median_by_primary_diagnosis <- sapply(
+  levels(colData(vsd)$primary_diagnosis),
+  function(l) {
+    median(
+      assay(vsd)[rownames(vsd) == "ENSG00000112299", colData(vsd)$primary_diagnosis == l]
+    )
+  }
+)
+
+colData(vsd)$VNN1_group_by_primary_diagnosis_diagnosis <- factor(
+  ifelse(
+    assay(vsd)[rownames(vsd) == "ENSG00000112299", ] > median_by_primary_diagnosis[colData(vsd)$primary_diagnosis],
+    "high",
+    "low"
+  ),
+  levels = c("low", "high")
+)
+
+median_by_paper_histology <- sapply(
+  levels(colData(vsd)$paper_short_histo),
+  function(l) {
+    median(
+      assay(vsd)[rownames(vsd) == "ENSG00000112299", colData(vsd)$paper_short_histo %in% l]
+    )
+  }
+)
+
+colData(vsd)$VNN1_group_by_paper_histology <- factor(
+  ifelse(
+    assay(vsd)[rownames(vsd) == "ENSG00000112299", ] > median_by_paper_histology[colData(vsd)$paper_short_histo],
+    "high",
+    "low"
+  ),
+  levels = c("low", "high")
+)
+
+colData(dds) <- colData(vsd)
+
+saveRDS(
+  object = vsd,
+  file = file.path(
+    gdc_dir,
+    "vsd.rds"
+  )
+)
+
+saveRDS(
+  object = dds,
+  file = file.path(
+    gdc_dir,
+    "dds.rds"
+  )
+)
+rm(dds, vsd)
+```
+
+```{r exportAnnotations, eval=FALSE}
+dds <- readRDS(
+  file.path(
+    mw_from_rmd,
+    "out/GDCdata",
+    "dds.rds"
+  )
+)
+
+d_to_export <- as.data.table(
+  colData(dds)[, !names(colData(dds)) %in% c(
+    "primary_site",
+    "disease_type",
+    "treatments"
+  )]
+)
+fwrite(
+  x = d_to_export,
+  file = file.path(
+    gdc_dir,
+    "TCGA_metadata.csv"
+  )
+)
+rm(d_to_export, dds)
+```
+

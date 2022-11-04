@@ -1,0 +1,20 @@
+##### Malignant peripheral nerve sheath tumor
+
+The differential expression analysis is done considering only gender as covariate.
+
+```{r resultsDeseq2Vnn1HighVsLowPrimaryDiagnosisMalignantPeripheralNerveSheathTumorKnitPostDeseq2Template, cache=FALSE, results="asis"}
+source("loadEnv.R")
+
+smi <- "out/r/compute_deseq2/VNN1/HighVsLowPrimaryDiagnosisMalignantPeripheralNerveSheathTumor_ddss.rds"
+linkSmiToRmdAndBookDir(smi)
+ddss <- readRDS(smi)
+
+smi <- "out/r/compute_deseq2/VNN1/HighVsLowPrimaryDiagnosisMalignantPeripheralNerveSheathTumor_ddssr.rds"
+linkSmiToRmdAndBookDir(smi)
+ddssr <- readRDS(smi)
+
+knitPostDeseq2Template(
+  d = ddss,
+  r = ddssr
+)
+```

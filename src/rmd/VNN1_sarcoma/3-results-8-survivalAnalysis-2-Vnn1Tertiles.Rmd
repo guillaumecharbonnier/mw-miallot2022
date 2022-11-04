@@ -1,0 +1,238 @@
+### VNN1 tertiles {#resultsSurvivalAnalysisVnn1Tertiles}
+
+```{r resultsSurvivalAnalysisVnn1TertilesAllSelectedTcgaProjects, fig.cap="Kaplan-Meier plot for all selected TCGA projects"}
+fit <- survfit(
+  Surv(
+    d$days_to_death_or_last_follow_up,
+    d$vital_status_bin,
+  ) ~ VNN1_tertiles_by_state,
+  data = d
+)
+ggsurvplot(
+  fit,
+  data = d,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+#### By project id
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaSarc, fig.cap="Kaplan-Meier plot for TCGA-SARC"}
+ds <- d[d$project_id %in% "TCGA-SARC", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaOv, fig.cap="Kaplan-Meier plot for TCGA-OV"}
+ds <- d[d$project_id %in% "TCGA-OV", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaEsca, fig.cap="Kaplan-Meier plot for TCGA-ESCA"}
+ds <- d[d$project_id %in% "TCGA-ESCA", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaPaad, fig.cap="Kaplan-Meier plot for TCGA-PAAD"}
+ds <- d[d$project_id %in% "TCGA-PAAD", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaMeso, fig.cap="Kaplan-Meier plot for TCGA-MESO"}
+ds <- d[d$project_id %in% "TCGA-MESO", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaBrca, fig.cap="Kaplan-Meier plot for TCGA-BRCA"}
+ds <- d[d$project_id %in% "TCGA-BRCA", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaLihc, fig.cap="Kaplan-Meier plot for TCGA-LIHC"}
+ds <- d[d$project_id %in% "TCGA-LIHC", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaBlca, fig.cap="Kaplan-Meier plot for TCGA-BLCA"}
+ds <- d[d$project_id %in% "TCGA-BLCA", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaStad, fig.cap="Kaplan-Meier plot for TCGA-STAD"}
+ds <- d[d$project_id %in% "TCGA-STAD", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaLusc, fig.cap="Kaplan-Meier plot for TCGA-LUSC"}
+ds <- d[d$project_id %in% "TCGA-LUSC", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+```{r resultsSurvivalAnalysisVnn1TertilesTcgaLuad, fig.cap="Kaplan-Meier plot for TCGA-LUAD"}
+ds <- d[d$project_id %in% "TCGA-LUAD", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_project_id,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```
+
+#### By primary diagnosis
+
+```{r resultsSurvivalAnalysisVnn1TertilesPrimaryDiagnosisSquamousCellCarcinomaNos, fig.cap="Kaplan-Meier plot for **Squamous cell carcinoma, NOS**"}
+ds <- d[d$primary_diagnosis %in% "Squamous cell carcinoma, NOS", ]
+fit <- survfit(
+  Surv(
+    ds$days_to_death_or_last_follow_up,
+    ds$vital_status_bin,
+  ) ~ VNN1_tertiles_by_primary_diagnosis,
+  data = ds
+)
+ggsurvplot(
+  fit,
+  data = ds,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE
+)
+```

@@ -1,0 +1,273 @@
+## Correlation analyses
+
+In this section, correlation analyses are produced using Pearson coefficient correlation r.
+
+```{r}
+badly_formatted_cols <- c(
+  "primary_site",
+  "disease_type",
+  "treatments"
+)
+factor_cols <- c(
+  "barcode",
+  "patient",
+  "bcr_patient_barcode",
+  "sample",
+  "sample_submitter_id",
+  "sample_id",
+  "pathology_report_uuid",
+  "submitter_id",
+  "paper_patient",
+  "paper_histology",
+  "paper_short_histo",
+  "primary_diagnosis"
+)
+redundant_cols <- c(
+  "age_at_index",
+  "year_of_birth",
+  "year_of_death"
+)
+cibersortx_not_pop_cols <- c(
+  "RMSE",
+  "P-value",
+  "Correlation"
+)
+
+irrelevant_cols <- c(
+  badly_formatted_cols,
+  factor_cols,
+  cibersortx_not_pop_cols,
+  redundant_cols
+)
+```
+
+### All selected projects {#resultsCorrelogramsAllSelectedProjects}
+
+```{r resultsCorrelograms, fig.cap="Correlogram for VNN1 signal and metadata converted as numeric. Note that some conversions to numeric are actually meaningless here, e.g. samples names... Black cross highlight comparisons not passing a p-value < 0.05 threshold.", fig.width=10, fig.height=10}
+smi <- "out/r/annotate_tcga/dds.rds"
+linkSmiToRmdAndBookDir(smi)
+dds <- readRDS(smi)
+
+d <- as.data.table(
+  colData(dds)[, !names(colData(dds)) %in% irrelevant_cols]
+)
+d[, VNN1_VST_signal := assay(vsd)[rowData(vsd)$hugo_symbol == "VNN1", ]]
+d <- data.matrix(d)
+n_discrete_values_by_col <- apply(d, 2, function(x) length(unique(x)))
+n_na_by_col <- apply(d, 2, function(x) sum(is.na(x)))
+d <- d[, n_discrete_values_by_col > 5 & n_na_by_col < 60]
+# d <- as.data.frame(data.matrix(d))
+# # We remove the column with only 1 value
+# d <- Filter(function(x) min(x, na.rm = TRUE)!=max(x, na.rm = TRUE), d)
+# browser()
+# d <- d[, !names(d) %in% c(
+#   "shortLetterCode",
+#   "definition",
+#   "sample_submitter_id",
+#   "sample_type_id",
+#   "sample_id",
+#   "sample_type"
+# )]
+r_mat <- cor(
+  d,
+  use = "pairwise.complete.obs"
+)
+p_mat <- cor_pmat(
+  d,
+  use = "pairwise.complete.obs"
+)
+ggcorrplot(
+  r_mat,
+  # type = "upper",
+  hc.order = TRUE,
+  p.mat = p_mat
+)
+```
+
+```{r resultsCorrelogramsP0p001, fig.cap="Correlogram for VNN1 signal and metadata converted as numeric. Note that some conversions to numeric are actually meaningless here, e.g. samples names... Black cross highlight comparisons not passing a p-value < 0.001 threshold.", fig.width=10, fig.height=10}
+ggcorrplot(
+  r_mat,
+  # type = "upper",
+  hc.order = TRUE,
+  sig.level = 0.001,
+  p.mat = p_mat
+)
+```
+
+### TCGA-SARC only with cell deconvolution
+
+```{r resultsCorrelogramsWithCibersortx, fig.cap="Correlogram for VNN1 signal, CIBERSORTx mixture decomposition and metadata converted as numeric. Note that some conversions to numeric are actually meaningless here, e.g. samples names... Black cross highlight comparisons not passing a p-value < 0.05 threshold.", fig.width=30, fig.height=30}
+irrelevant_cols <- irrelevant_cols[!irrelevant_cols %in% "barcode"]
+d_cibersort <- d_cibersort[
+  ,
+  !names(d_cibersort) %in% irrelevant_cols,
+  with = FALSE
+]
+d <- as.data.table(
+  colData(dds)[, !names(colData(dds)) %in% irrelevant_cols]
+)
+d[, VNN1_VST_signal := assay(vsd)[rowData(vsd)$hugo_symbol == "VNN1", ]]
+d <- merge(
+  d,
+  d_cibersort,
+  by.x = "barcode",
+  by.y = "Mixture"
+)
+fwrite(
+  d,
+  file = file.path(
+    book_from_rmd,
+    "TcgaSarcMetadataVnn1Cibersortx.csv"
+  )
+)
+
+d <- data.matrix(d)
+n_discrete_values_by_col <- apply(d, 2, function(x) length(unique(x)))
+n_na_by_col <- apply(d, 2, function(x) sum(is.na(x)))
+d <- d[, n_discrete_values_by_col > 5 & n_na_by_col < 60]
+# d <- as.data.frame(data.matrix(d))
+# # We remove the column with only 1 value
+# d <- Filter(function(x) min(x, na.rm = TRUE)!=max(x, na.rm = TRUE), d)
+# browser()
+# d <- d[, !names(d) %in% c(
+#   "shortLetterCode",
+#   "definition",
+#   "sample_submitter_id",
+#   "sample_type_id",
+#   "sample_id",
+#   "sample_type"
+# )]
+r_mat <- cor(
+  d,
+  use = "pairwise.complete.obs"
+)
+p_mat <- cor_pmat(
+  d,
+  use = "pairwise.complete.obs"
+)
+ggcorrplot(
+  r_mat,
+  # type = "upper",
+  hc.order = TRUE,
+  p.mat = p_mat
+)
+```
+
+```{r resultsCorrelogramsWithCibersortxFocusVnn1, fig.cap="Correlogram for VNN1 signal and CIBERSORTx mixture decomposition. Black cross highlight comparisons not passing a p-value < 0.05 threshold.", fig.width=11, fig.height=11}
+d <- data.table(
+  VNN1_VST_signal = assay(vsd)[rowData(vsd)$hugo_symbol == "VNN1", d_cibersort$Mixture],
+  d_cibersort
+)
+d[, Mixture := NULL]
+d <- data.matrix(d)
+r_mat <- cor(
+  d,
+  use = "pairwise.complete.obs"
+)
+p_mat <- cor_pmat(
+  d,
+  use = "pairwise.complete.obs"
+)
+ggcorrplot(
+  r_mat,
+  # type = "upper",
+  hc.order = TRUE,
+  p.mat = p_mat
+)
+```
+
+```{r resultsCorrelogramsWithCibersortxFocusVnn1Pvalue0p001, fig.cap="Correlogram for VNN1 signal and CIBERSORTx mixture decomposition. Black cross highlight comparisons not passing a p-value < 0.001 threshold.", fig.width=11, fig.height=11}
+ggcorrplot(
+  r_mat,
+  # type = "upper",
+  hc.order = TRUE,
+  sig.level = 0.001,
+  p.mat = p_mat
+)
+```
+
+
+```{r resultsCorrelogramsFocusVNN1IntegrationWithCibersortx, fig.cap="Comparison of VNN1 Signal in LM22 signatures with VNN1 correlation with deconvolve subtypes."}
+smi <- "inp/cibersortx/LM22.txt"
+linkSmiToRmdAndBookDir(smi)
+d_lm22 <- fread(smi)
+
+cell_types <- names(d_lm22)[-1]
+d <- list()
+d$`LM22 RNA signal` <- d_lm22[`Gene symbol` == "VNN1", ..cell_types]
+d$`r Pearson` <- data.table(r_mat)
+d$`r Pearson` <- d$`r Pearson`[rownames(r_mat) == "VNN1_VST_signal", ..cell_types]
+d$`-log10(Pval Pearson)` <- -log10(data.table(p_mat)[rownames(p_mat) == "VNN1_VST_signal", ..cell_types])
+d <- reshape2::melt(d)
+setnames(
+  d,
+  old = c(
+    "variable",
+    "L1"
+  ),
+  new = c(
+    "Cell type",
+    "Variable"
+  )
+)
+d$Variable <- factor(
+  d$Variable,
+  levels = c(
+    "LM22 RNA signal",
+    "r Pearson",
+    "-log10(Pval Pearson)"
+  )
+)
+p <- ggplot(
+  d,
+  aes(
+    fill = `Cell type`,
+    x = `Cell type`,
+    y = value
+  )
+)
+p <- p + facet_grid(. ~ Variable, scale = "free")
+p <- p + geom_bar(
+  # position = "stack",
+  stat = "identity"
+)
+p <- p + coord_flip()
+p <- p + theme(
+  # axis.text.x = element_text(
+  #   angle = 90,
+  #   hjust = 1,
+  #   vjust = 0.5
+  # ),
+  legend.position = "none"
+)
+p
+```
+
+
+```{r resultsCorrelogramsFocusSurvival, fig.cap="Focus on Survival metadata"}
+d <- as.data.table(
+  colData(dds)[, names(colData(dds)) %in% c(
+    "paper_tumor_status",
+    "paper_OS_status",
+    "paper_DSS_status",
+    "paper_OS_days"
+  )]
+)
+d[, VNN1_VST_signal := assay(vsd)[rowData(vsd)$hugo_symbol == "VNN1", ]]
+d <- d[!is.na(d$paper_OS_status), ]
+d <- data.matrix(d)
+r_mat <- cor(
+  d,
+  use = "pairwise.complete.obs"
+)
+p_mat <- cor_pmat(
+  d,
+  use = "pairwise.complete.obs"
+)
+ggcorrplot(
+  r_mat,
+  # type = "upper",
+  hc.order = TRUE,
+  p.mat = p_mat
+)
+```
